@@ -157,6 +157,8 @@ int CurCountRadioStation(String r_file, int r_type, int r_location) {
 
 //Загрузка радиотрансляции
 void PlayStation() {
+  favorites_flag4 = favorites_flag;
+  cur_radio_station4 = cur_radio_station;
   retry = 0;
   slow = 0;
   na_flag = false;
@@ -178,6 +180,8 @@ void PlayStation() {
 
 //Возобновление проигрывания радиотрансляции
 void ReplayStation() {
+  favorites_flag4 = favorites_flag;
+  cur_radio_station4 = cur_radio_station;
   if (retry > 3) return;
   if (audio.isRunning()) audio.stopSong();
   int ct;
@@ -459,7 +463,7 @@ int DelStation() {
       file = SD.open(r_file + ".ini", FILE_READ);
     } else {
       int t_r = 0;
-      int pos = cur_radio_station;
+      int pos = cur_radio_station4;
       for (int i = 0; i < total_radio_ini; i++) {
         t_r = t_r + rl_count[i];
         if (t_r >= pos) {

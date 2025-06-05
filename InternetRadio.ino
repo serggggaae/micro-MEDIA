@@ -982,8 +982,6 @@ void audio_info(const char *info) {
 
   //Воспроизведение прервалось -> подождать и повторить соединение
   if (buff.indexOf(F("Request ")) != -1 && buff.indexOf(F(" failed!")) > 0 && internet_flag == true) {
-    favorites_flag4 = favorites_flag;
-    cur_radio_station4 = cur_radio_station;
     slowk = true;
     //Очень короткий и возможно пустой url радиостанции
     if (buff.length() < 26) {
@@ -1326,8 +1324,6 @@ void GetPlayInfo() {
       else {
         slows++;
         if (slows > 5) {
-          favorites_flag4 = favorites_flag;
-          cur_radio_station4 = cur_radio_station;
           notfound();
         }
       }
@@ -1584,41 +1580,44 @@ void initOTA() {
 void notfound() {
   slows = 0;
   slowk = true;
-  audio.stopSong();
-  if (del_st_sw_flag) {
-    favorites_flag = favorites_flag4;
-    cur_radio_station = cur_radio_station4;
-    if (favorites_flag) {
-      radio_station_count = DelStationFromFav();
-      cur_radio_location = 0;
-      cur_radio_type = 0;
-      if (cur_radio_station > radio_station_count) cur_radio_station = radio_station_count;
-      //clearInfo();
-      radio_station = LoadRadioStation(cur_radio_station, cur_radio_type, cur_radio_location);
-    } else {
-      DelStation();
-      !favorites_flag;
-      DelStation();
-      !favorites_flag;
-      radio_station_count--;
-      if (cur_radio_station > 0) {
-        clearInfo();
+  if (favorites_flag == favorites_flag4) {
+    if (del_st_sw_flag) {
+      if (favorites_flag) {
+        audio.setVolume(0);
+        radio_station_count = DelStationFromFav();
+        cur_radio_location = 0;
+        cur_radio_type = 0;
+        if (cur_radio_station > radio_station_count) cur_radio_station = radio_station_count;
+        //clearInfo();
         radio_station = LoadRadioStation(cur_radio_station, cur_radio_type, cur_radio_location);
+      } else {
+        DelStation();
+        !favorites_flag;
+        DelStation();
+        !favorites_flag;
+        radio_station_count--;
+        if (cur_radio_station > 0) {
+          clearInfo();
+          radio_station = LoadRadioStation(cur_radio_station, cur_radio_type, cur_radio_location);
+        }
+      }
+      if (cur_radio_station < cur_radio_station2) cur_radio_station2 = cur_radio_station2--;
+      if (cur_radio_station < cur_radio_station3) cur_radio_station3 = cur_radio_station3--;
+    }
+    if (autoscan) {
+      if (cur_radio_station != cur_radio_station2 && cur_radio_station != cur_radio_station3) cur_radio_station = cur_radio_station2;
+      else if (cur_radio_station != cur_radio_station3) cur_radio_station = cur_radio_station3;
+      else {
+        cur_radio_station = cur_radio_station + 3;
+        cur_radio_station2 = cur_radio_station2 + 3;
+        cur_radio_station3 = cur_radio_station3 + 3;
       }
     }
-    if (cur_radio_station < cur_radio_station2) cur_radio_station2 = cur_radio_station2--;
-    if (cur_radio_station < cur_radio_station3) cur_radio_station3 = cur_radio_station3--;
   }
-  if (autoscan) {
-    favorites_flag = favorites_flag4;
-    cur_radio_station = cur_radio_station4;
-    if (cur_radio_station != cur_radio_station2 && cur_radio_station != cur_radio_station3) cur_radio_station = cur_radio_station2;
-    else if (cur_radio_station != cur_radio_station3) cur_radio_station = cur_radio_station3;
-    else {
-      cur_radio_station3 = cur_radio_station2 + 2;
-      cur_radio_station2 = cur_radio_station2++;
-    }
+  if (autoscan) PlayStation();
+  else if (del_st_sw_flag) {
+    pre_radio_station = cur_radio_station;
+    replay_station_flag = true;
   }
-  PlayStation();
   update_flag = true;
 }
