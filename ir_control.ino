@@ -306,8 +306,9 @@ void ir_tick() {
             cur_radio_station = FindRadioStation(station_ini_string);
             if (cur_radio_station == 0) cur_radio_station = 1;
             clearInfo();
+            pre_radio_station = cur_radio_station;
             radio_station = LoadRadioStation(cur_radio_station, cur_radio_type, cur_radio_location);
-            ReplayStation();
+            replay_station_flag = true;
             break;
           case 2:  //Проигрыватель
             if (favorites_flag1 == true) {

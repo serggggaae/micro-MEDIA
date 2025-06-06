@@ -144,8 +144,9 @@ void CheckButton() {
               clearInfo();
               if (radio_station_count > 0) {
                 audio.setVolume(0);
+                pre_radio_station = cur_radio_station;
                 radio_station = LoadRadioStation(cur_radio_station, cur_radio_type, cur_radio_location);
-                ReplayStation();
+                replay_station_flag = true;
                 update_flag = true;
                 eeprom_timer = millis();
                 eeprom_flag = true;
