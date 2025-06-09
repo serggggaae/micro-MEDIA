@@ -1,0 +1,89 @@
+Мод на радио Олега Полякова.
+В моем моде доработано:
+
+Немного переделана схема подключения периферии.
+//Энкодер
+#define CLK 41
+#define DT 40
+#define SW 39
+#define PIN 1  // кнопка подключена сюда (PIN --- КНОПКА --- GND)
+#define IR_PIN 2  // пин подключения ИК-датчика
+
+// DAC I/O used
+#define I2S_DOUT 38  //DIN
+#define I2S_BCLK 21  //BSK
+#define I2S_LRC 47   //LCK
+
+//SD-card reader
+#define SD_CS 11
+#define SPI_MOSI 12
+#define SPI_MISO 13
+#define SPI_SCK 14
+
+//TFT-screen pin for ESP32
+#define TFT_CS 3     //case select connect to pin 3
+#define TFT_RST 8    //reset connect to pin 8
+#define TFT_DC 18    //AO connect to pin 32  (not sure that this is really used)  try pin 18
+#define TFT_MOSI 17  //Data = SDA connect to pin 17
+#define TFT_SCLK 16  //Clock = SCK connect to pin 16
+#define MAX_ALARMS 5
+//Пин управления яркостью подсветки дисплея
+#define TFT_LED 42
+
+Пин подключения индикатора батареи после делителя: 4
+
+Менять пины не очень хорошо, могут появиться проблеммы.
+
+Пульт д.у.- немного переделанный алгоритм управления. Радио запрограммировано на
+ использование пульта от приставки x96 https://cam.kh.ua/components/com_virtuemart/shop_image/product/___________X96_m_609bc9f9cbb10.jpg
+ Пульт должен быть в кодировке NEC.
+ Так как пока нет веб для настроек кодировок пульта, пока в случае необходииости придется менять коды в InternetRadio.ino.
+ Для удобства они вынесены в define.
+ 
+#define off 0x40
+#define repeat 0x42
+#define next 0x50
+#define prev 0x51
+#define up 0x16
+#define down 0x1a
+#define swap 0x4c
+#define mute 0x5a
+#define menus 0x44
+#define clocks 0x11
+#define fav 0x19
+#define randoms 0x13
+#define ganr 0x4e
+#define ganrall 0x0d
+#define ganrp 0x0c
+#define lok 0x4a
+#define lokall 0x09
+#define lokp 0x08
+#define next10 0x54
+#define prev10 0x55
+
+Здесь для изменения кодов под другой пульт, нужно как-то узнать код необходимой кнопки и внести ее в define.
+
+В кратце- кнопка "randoms" это ОК, выбирает случайную станцию. Если находиться в меню, то подтверждение.
+
+Кнопка repeat повтор предидущих трех станций, запоминаются в еепром.
+
+menus главное меню.
+
+Кнопка на радио которая тоже немного изменена , однократное нажатие это повтор предидущих.
+
+В индикацию батареи добавил анимацию зарядки, только проверить как работает у меня нет возможности.
+
+Добавил для удобства ОТА, пароль при запросе admin.
+
+По вэб управлению:
+
+В настройках:в подменю "радио» добавлен переключатель поведения кнопки энкодера- громкость регулируется с нажатием или без.
+
+Добавлены будильники на вкл. и выкл. с гегулировкой громкости включения и выбором дней недели срабатывания,
+их количество можно установить в #define MAX_ALARMS 5.
+
+Запоминаются все состояния радио, предидущие станции на момент выключения.
+
+При переделке стараюсь делать максимум повторения кода автора.
+
+Что еще не указал, спрашивайте на форуме.
