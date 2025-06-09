@@ -54,7 +54,16 @@ void ir_tick() {
       return;
     }
     switch (IrReceiver.decodedIRData.command) {
-
+      case skansss:
+        skan = !skan;
+        counter_st = 0;
+        cur_radio_station++;
+        notend();
+        eeprom_timer = millis();
+        eeprom_flag = true;
+        break;
+      default:
+        break;
       case next:  // -> следующая станция/композиция
         if (LedOn()) return;
         switch (fix_mode) {
@@ -273,7 +282,9 @@ void ir_tick() {
           sleeping = false;
           set_led = cur_led;
           if (pause_flag == false) {
-            ReplayStation();
+            if (fix_mode == 0) ReplayStation();
+            else
+              PlayMusic();
             update_flag = true;
           }
         }

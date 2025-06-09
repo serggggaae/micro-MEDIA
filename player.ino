@@ -148,7 +148,6 @@ String LoadFavMusic(int l_file, int l_folder) {
   return "";
 }
 
-
 void PlayMusic() {
   if (cur_music_file == 0) cur_music_file = 1;
   audio.setVolume(0);
@@ -159,8 +158,8 @@ void PlayMusic() {
   //Рандомизация
   if (rand_song == true) {
     cur_music_file = random(1, music_count + 1);
-    rand_song = false;
   }
+  rand_song = old_rand_song;
   if (favorites_flag1 == true) {
     if (all_fav_flag == true) {
       music_file = LoadFavMusic(cur_music_file, -1);

@@ -182,15 +182,18 @@ void SettingsSubScreen(int cursor, int sub_cursor) {
       printMenuText(F("С кликом / без "));
       menuSwitch(voice_sw_flag);
       tft.setCursor(28, 62);
-      printMenuText(F("Автосканирование "));
+      printMenuText(F("Автовозврат "));
       menuSwitch(autoscan);
       tft.setCursor(28, 76);
       printMenuText(F("Удалять не рабоч "));
       menuSwitch(del_st_sw_flag);
       tft.setCursor(28, 90);
+      printMenuText(F("Удалять медленн. "));
+      menuSwitch(del_st_slow_flag);
+      tft.setCursor(28, 104);
       printMenuText(F("Случ. композиция "));
       menuSwitch(rand_song);
-      tft.setCursor(28, 104);  //+14
+      tft.setCursor(28, 118);  //+14
       printMenuText(F("Индекс. файлов"));
       printAddMenu();
       break;
@@ -261,7 +264,7 @@ void SettingsSubMove() {
           if (sub_menu_pos > 5) sub_menu_pos = 1;
           break;
         case 4:
-          if (sub_menu_pos > 6) sub_menu_pos = 1;
+          if (sub_menu_pos > 7) sub_menu_pos = 1;
           break;
         case 5:
           sub_menu_pos = 7;
@@ -284,7 +287,7 @@ void SettingsSubMove() {
           if (sub_menu_pos < 1) sub_menu_pos = 5;
           break;
         case 4:
-          if (sub_menu_pos < 1) sub_menu_pos = 6;
+          if (sub_menu_pos < 1) sub_menu_pos = 7;
           break;
         case 5:
           sub_menu_pos = 7;
@@ -384,10 +387,13 @@ void SettingsSubMove() {
             case 4:  //del_st_sw_flag
               del_st_sw_flag = !del_st_sw_flag;
               break;
-            case 5:  //Случ. композиция
+            case 5:  //del_st_slow_flag
+              del_st_slow_flag = !del_st_slow_flag;
+              break;
+            case 6:  //Случ. композиция
               rand_song = !rand_song;
               break;
-            case 6:  //Индексация файлов
+            case 7:  //Индексация файлов
               showIndexMenu();
               break;
           }
@@ -559,12 +565,12 @@ String getDaysString(bool days[7]) {
 }
 
 void showNnumMenu() {
-  // Сохраняем текущий номер будильника перед изменением
-  int currentAlarm = numAl;
-  if (waikup_day[numAl][7]) {
-    waikup_day[numAl][7] = false;
-    for (int i = 0; i < 7; i++) {
-      waikup_day[numAl][i] = true;
+  for (int i = 0; i < MAX_ALARMS; i++) {
+    if (waikup_day[i][7]) {
+      waikup_day[i][7] = false;
+      for (int y = 0; y < 7; y++) {
+        waikup_day[i][y] = true;
+      }
     }
   }
   showSubTitle("Будильник вкл. " + String(numAl + 1));
@@ -755,8 +761,6 @@ void showNnumMenu() {
     if (enc1.isReleaseHold() || pult_code == randoms) {
       if (LedOn()) break;
 
-      // Очищаем старые данные
-
       // Переключаем на следующий будильник
       numAl++;
       if (numAl >= MAX_ALARMS) numAl = 0;
@@ -804,12 +808,12 @@ void clearDay(int dayValue, bool isWakeUp) {
 }
 
 void showNnumMenuoff() {
-  // Сохраняем текущий номер будильника перед изменением
-  int currentAlarm = numAl2;
-  if (sleep_day[numAl2][7]) {
-    sleep_day[numAl2][7] = false;
-    for (int i = 0; i < 7; i++) {
-      sleep_day[numAl2][i] = true;
+  for (int i = 0; i < MAX_ALARMS; i++) {
+    if (sleep_day[i][7]) {
+      sleep_day[i][7] = false;
+      for (int y = 0; y < 7; y++) {
+        sleep_day[i][y] = true;
+      }
     }
   }
   showSubTitle("Будильник выкл. " + String(numAl2 + 1));
@@ -1000,8 +1004,6 @@ void showNnumMenuoff() {
     // Переключение номера будильника через шапку
     if (enc1.isReleaseHold() || pult_code == randoms) {
       if (LedOn()) break;
-
-      // Очищаем старые данные
 
       // Переключаем на следующий будильник
       numAl2++;

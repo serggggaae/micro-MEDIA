@@ -104,6 +104,8 @@ void readEEPROM() {
     address += sizeof(volumea);
     EEPROM.put(address, del_st_sw_flag);
     address += sizeof(del_st_sw_flag);
+    EEPROM.put(address, del_st_slow_flag);
+    address += sizeof(del_st_slow_flag);
     EEPROM.put(address, autoscan);
     address += sizeof(autoscan);
 
@@ -217,6 +219,8 @@ void readEEPROM() {
   address += sizeof(volumea);
   EEPROM.get(address, del_st_sw_flag);
   address += sizeof(del_st_sw_flag);
+  EEPROM.get(address, del_st_slow_flag);
+  address += sizeof(del_st_slow_flag);
   EEPROM.get(address, autoscan);
   address += sizeof(autoscan);
 
@@ -378,6 +382,9 @@ void updateEEPROM() {
   EEPROM.get(address, eget);
   if (eget != del_st_sw_flag) EEPROM.put(address, del_st_sw_flag);
   address += sizeof(del_st_sw_flag);
+  EEPROM.get(address, eget);
+  if (eget != del_st_slow_flag) EEPROM.put(address, del_st_slow_flag);
+  address += sizeof(del_st_slow_flag);
   EEPROM.get(address, eget);
   if (eget != autoscan) EEPROM.put(address, autoscan);
   address += sizeof(autoscan);

@@ -675,8 +675,10 @@ void build() {
       GP.SPOILER_BEGIN(F("Радио"), GP_GREEN);
       M_BOX(GP.LABEL(F("Выбор из списка:"), "", GP_DEFAULT, 16, 0, 1); GP.SWITCH(F("preview_mode_flag"), preview_mode_flag, GP_GREEN););
       M_BOX(GP.LABEL(F("Способ выбора,<br>с кликом или без:"), "", GP_DEFAULT, 16, 0, 1); GP.SWITCH(F("voice_sw"), voice_sw_flag, GP_GREEN););
-      M_BOX(GP.LABEL(F("Автосканирование:"), "", GP_DEFAULT, 16, 0, 1); GP.SWITCH(F("autoscan"), autoscan, GP_GREEN););
+      M_BOX(GP.LABEL(F("Автовозврат:"), "", GP_DEFAULT, 16, 0, 1); GP.SWITCH(F("autoscan"), autoscan, GP_GREEN););
       M_BOX(GP.LABEL(F("Удалять<br>не рабочие?:"), "", GP_DEFAULT, 16, 0, 1); GP.SWITCH(F("del_st_sw"), del_st_sw_flag, GP_GREEN););
+      M_BOX(GP.LABEL(F("Удалять<br>медленные?:"), "", GP_DEFAULT, 16, 0, 1); GP.SWITCH(F("del_slow_sw"), del_st_slow_flag, GP_GREEN););
+      M_BOX(GP.LABEL(F("Сканирование...:"), "", GP_DEFAULT, 16, 0, 1); GP.SWITCH(F("skan"), skan, GP_GREEN););
       M_BOX(GP.LABEL(F("Станций<br>на странице:"), "", GP_DEFAULT, 16, 0, 0); GP.SLIDER(F("radio_per_page"), radio_per_page, 50, 500, 50, 0, GP_GREEN_B, 0););
       GP.SPOILER_END();
       GP.BREAK();
@@ -838,19 +840,19 @@ void GP_RADIO() {
   GP.TABLE_BEGIN();
   GP.TR();
   GP.TD();
-  GP.BUTTON_MINI(F("prev10_st_btn"), "◄", "", GP_GREEN, F("100% !important; margin:0px 0px !important;"));
+  GP.BUTTON_MINI(F("prev10_st_btn"), "10◄", "", GP_GREEN, F("100% !important; margin:4px 0px !important;"));
   GP.SEND(F("</td>"));
   GP.TD();
   GP.BUTTON_MINI(F("prev_st_btn"), "◄", "", GP_GREEN_B, F("100% !important; margin:4px 0px !important;"));
   GP.SEND(F("</td>"));
   GP.TD();
-  GP.BUTTON_MINI(F("pause_st_btn"), "❚❚", "", GP_GREEN_B, F("100% !important; margin:4px 0px !important;"));
+  GP.BUTTON_MINI(F("pause_st_btn"), "⏻", "", GP_RED, F("100% !important; margin:4px 0px !important;"));
   GP.SEND(F("</td>"));
   GP.TD();
   GP.BUTTON_MINI(F("next_st_btn"), "►", "", GP_GREEN_B, F("100% !important; margin:4px 0px !important;"));
   GP.SEND(F("</td>"));
   GP.TD();
-  GP.BUTTON_MINI(F("next10_st_btn"), "►", "", GP_GREEN, F("100% !important; margin:4px 0px !important;"));
+  GP.BUTTON_MINI(F("next10_st_btn"), "►10", "", GP_GREEN, F("100% !important; margin:4px 0px !important;"));
   GP.SEND(F("</td></tr>"));
   GP.TABLE_END();
   if (cur_radio_type == 0) {
@@ -904,23 +906,26 @@ void GP_RADIO() {
   GP.TABLE_BEGIN("", nullptr, F("120px;"));
   GP.TR();
   GP.TD();
-  GP.BUTTON_MINI_LINK(F("/radio_list"), "&#9776;", GP_GREEN, F("40px !important; margin:4px 0px !important;"), F("radio_list"));
+  GP.BUTTON_MINI_LINK(F("/radio_list"), "&#9776;", GP_GREEN, F("37px !important; margin:4px 0px !important;"), F("radio_list"));
   GP.SEND("</td>");
   GP.TD();
-  GP.BUTTON_MINI_LINK(F("/find_radio"), "🔎", GP_GREEN, F("40px !important; margin:4px 0px !important;"), F("find_radio"));
+  GP.BUTTON_MINI_LINK(F("/find_radio"), "🔎", GP_GREEN, F("37px !important; margin:4px 0px !important;"), F("find_radio"));
   GP.SEND("</td>");
   GP.TD();
-  GP.BUTTON_MINI_LINK(F("/"), "🎲", GP_GREEN, F("40px !important; margin:4px 0px !important;"), F("radio_rnd"));
+  GP.BUTTON_MINI_LINK(F("/"), "🎲", GP_GREEN, F("37px !important; margin:4px 0px !important;"), F("radio_rnd"));
   GP.SEND("</td>");
   GP.TD();
-  GP.BUTTON_MINI_LINK(F("/radio_edit"), "✚", GP_GREEN, F("40px !important; margin:4px 0px !important;"), F("radio_new"));
+  GP.BUTTON_MINI_LINK(F("/"), "⇆", GP_GREEN, F("37px !important; margin:4px 0px !important;"), F("repeat_radio"));
   GP.SEND("</td>");
   GP.TD();
-  GP.BUTTON_MINI_LINK(F("/radio_edit"), "✎", GP_GREEN, F("40px !important; margin:4px 0px !important;"), F("radio_edit"));
+  GP.BUTTON_MINI_LINK(F("/radio_edit"), "✚", GP_GREEN, F("37px !important; margin:4px 0px !important;"), F("radio_new"));
+  GP.SEND("</td>");
+  GP.TD();
+  GP.BUTTON_MINI_LINK(F("/radio_edit"), "✎", GP_GREEN, F("37px !important; margin:4px 0px !important;"), F("radio_edit"));
   GP.SEND(F("</td>"));
   GP.TD();
   GP.CONFIRM(F("del"), F("Желаете безвозвратно удалить текущую радиостанцию?"));
-  GP.BUTTON_MINI_LINK("/", "✘", GP_RED, F("40px !important; margin:4px 0px !important;"), F("radio_del"));
+  GP.BUTTON_MINI_LINK("/", "✘", GP_RED, F("37px !important; margin:4px 0px !important;"), F("radio_del"));
   GP.UPDATE_CLICK(F("del"), F("radio_del"));
   GP.SEND(F("</td></tr>"));
   GP.TABLE_END();
@@ -977,6 +982,7 @@ void GP_PLAYER() {
   info_flag = true;
   display_ready = false;
   add_station = 0;
+  old_rand_song = rand_song;
   if (favorites_flag1 == true) {
     if (all_fav_flag == true) {
       music_count = CountMusic(-1);
@@ -1056,19 +1062,19 @@ void GP_PLAYER() {
   GP.TABLE_BEGIN();
   GP.TR();
   GP.TD();
-  GP.BUTTON_MINI(F("prev10_mus_btn"), "◄", "", GP_BLUE, F("100% !important; margin:4px 0px !important;"));
+  GP.BUTTON_MINI(F("prev10_mus_btn"), "10◄", "", GP_BLUE, F("100% !important; margin:4px 0px !important;"));
   GP.SEND(F("</td>"));
   GP.TD();
   GP.BUTTON_MINI(F("prev_mus_btn"), "◄", "", GP_BLUE_B, F("100% !important; margin:4px 0px !important;"));
   GP.SEND(F("</td>"));
   GP.TD();
-  GP.BUTTON_MINI(F("pause_mus_btn"), "❚❚", "", GP_BLUE_B, F("100% !important; margin:4px 0px !important;"));
+  GP.BUTTON_MINI(F("pause_mus_btn"), "⏻", "", GP_RED, F("100% !important; margin:4px 0px !important;"));
   GP.SEND(F("</td>"));
   GP.TD();
   GP.BUTTON_MINI(F("next_mus_btn"), "►", "", GP_BLUE_B, F("100% !important; margin:4px 0px !important;"));
   GP.SEND(F("</td>"));
   GP.TD();
-  GP.BUTTON_MINI(F("next10_mus_btn"), "►", "", GP_BLUE, F("100% !important; margin:4px 0px !important;"));
+  GP.BUTTON_MINI(F("next10_mus_btn"), "►10", "", GP_BLUE, F("100% !important; margin:4px 0px !important;"));
   GP.SEND(F("</td></tr>"));
   GP.TABLE_END();
 
@@ -1112,9 +1118,15 @@ void GP_PLAYER() {
   GP.BREAK();
   GP.LABEL(F("AAC Codec:"), "", GP_DEFAULT, 13, 0, 0);
   GP.LABEL(aac_codec, F("aac_codec"), GP_ORANGE, 13, 1, 0);
-  GP.HR();
-  GP.BUTTON_MINI_LINK(F("/player"), "🎲", GP_BLUE, F("40px !important"), F("music_rnd"));
-  GP.BLOCK_END();
+  GP.TABLE_BEGIN();
+  GP.TR();
+  GP.TD();
+  GP.BUTTON_MINI(F("music_rnd"), "🎲", "", GP_BLUE, F("80px !important; margin:4px 0px !important;"));
+  GP.SEND(F("</td>"));
+  GP.TD();
+  GP.BUTTON_MINI(F("repeat_play"), "⇆", "", GP_BLUE, F("80px !important; margin:4px 0px !important;"));
+  GP.SEND(F("</td></tr>"));
+  GP.TABLE_END();
   //Блок регулировки звука
   GP_VOLUME();
 }
@@ -1254,14 +1266,20 @@ void action() {
       }
     }
     if (ui.click("pause_st_btn")) {
-      if (radio_station_count > 1) {
-        if (audio.isRunning()) {
-          audio.pauseResume();
-          pause_flag = true;
-        } else {
-          //вызывает ReplayStation() из процесса Radio
-          replay_station_flag = true;
-          pause_flag = false;
+      if (sleeping == false) {
+        sleeping = true;
+        set_led = 0;
+        audio.setVolume(0);
+        while (audio.getVolume() != 0) {
+          vTaskDelay(10);
+        }
+        if (audio.isRunning()) audio.stopSong();
+      } else {
+        sleeping = false;
+        set_led = cur_led;
+        if (pause_flag == false) {
+          ReplayStation();
+          update_flag = true;
         }
       }
     }
@@ -1398,6 +1416,19 @@ void action() {
       eeprom_timer = millis();
       eeprom_flag = true;
     }
+    if (ui.click("del_slow_sw")) {
+      del_st_slow_flag = !del_st_slow_flag;
+      eeprom_timer = millis();
+      eeprom_flag = true;
+    }
+    if (ui.click("skan")) {
+      skan = !skan;
+      counter_st = 0;
+      cur_radio_station++;
+      notend();
+      eeprom_timer = millis();
+      eeprom_flag = true;
+    }
     if (ui.click("autoscan")) {
       autoscan = !autoscan;
       eeprom_timer = millis();
@@ -1405,6 +1436,7 @@ void action() {
     }
     if (ui.click("rand_song")) {
       rand_song = !rand_song;
+      old_rand_song = rand_song;
       eeprom_timer = millis();
       eeprom_flag = true;
     }
@@ -1487,6 +1519,8 @@ void action() {
     }
     //Проигрыватель
     if (ui.click("prev10_mus_btn")) {
+      old_rand_song = rand_song;
+      rand_song = false;
       if (music_count > 10) {
         clearInfo();
         repeatm1();
@@ -1497,6 +1531,8 @@ void action() {
       }
     }
     if (ui.click("prev_mus_btn")) {
+      old_rand_song = rand_song;
+      rand_song = false;
       if (music_count > 1) {
         clearInfo();
         repeatm1();
@@ -1507,9 +1543,26 @@ void action() {
       }
     }
     if (ui.click("pause_mus_btn")) {
-      if (music_count > 1) audio.pauseResume();
+      if (sleeping == false) {
+        sleeping = true;
+        set_led = 0;
+        audio.setVolume(0);
+        while (audio.getVolume() != 0) {
+          vTaskDelay(10);
+        }
+        if (audio.isRunning()) audio.stopSong();
+      } else {
+        sleeping = false;
+        set_led = cur_led;
+        if (pause_flag == false) {
+          PlayMusic();
+          update_flag = true;
+        }
+      }
     }
     if (ui.click("next_mus_btn")) {
+      old_rand_song = rand_song;
+      rand_song = false;
       if (music_count > 1) {
         clearInfo();
         repeatm1();
@@ -1520,6 +1573,8 @@ void action() {
       }
     }
     if (ui.click("next10_mus_btn")) {
+      old_rand_song = rand_song;
+      rand_song = false;
       if (music_count > 10) {
         clearInfo();
         repeatm1();
@@ -1598,15 +1653,21 @@ void action() {
     if (ui.click("music_rnd")) {
       if (music_count > 1) {
         clearInfo();
-        if (rand_song == false) {
-          repeatm1();
-          rand_song = true;
-          repeatm3();
-          play_music_flag = true;
-        } else {
-          play_music_flag = true;
-        }
+        old_rand_song = rand_song;
+        repeatm1();
+        rand_song = true;
+        play_music_flag = true;
+        repeatm3();
       }
+    }
+    if (ui.click("repeat_play")) {
+      old_rand_song = rand_song;
+      rand_song = false;
+      if (cur_music_file == cur_music_file2 && cur_music_file2 != cur_music_file1) cur_music_file = cur_music_file1;
+      else if (cur_music_file != cur_music_file3) cur_music_file = cur_music_file3;
+      else if (cur_music_file != cur_music_file2) cur_music_file = cur_music_file2;
+      ShowInfoPanel();
+      play_music_flag = true;
     }
     if (ui.clickSub("load_fav_btn")) {
       favorites_flag = true;
@@ -1708,6 +1769,13 @@ void action() {
       ShowInfoPanel();
       // вызывает PlayStation() из процесса Radio
       play_station_flag = true;
+    }
+    if (ui.click("repeat_radio")) {
+      if (cur_radio_station == cur_radio_station2 && cur_radio_station2 != cur_radio_station1) cur_radio_station = cur_radio_station1;
+      else if (cur_radio_station != cur_radio_station3) cur_radio_station = cur_radio_station3;
+      else if (cur_radio_station != cur_radio_station2) cur_radio_station = cur_radio_station2;
+      ShowInfoPanel();
+      PlayStation();
     }
 
     if (ui.click("cur_led")) {
@@ -1887,6 +1955,8 @@ void action() {
     if (ui.update("voice_menu")) ui.answer(voice_menu_flag);
     if (ui.update("voice_sw")) ui.answer(voice_sw_flag);
     if (ui.update("del_st_sw")) ui.answer(del_st_sw_flag);
+    if (ui.update("del_slow_sw")) ui.answer(del_st_slow_flag);
+    if (ui.update("skan")) ui.answer(skan);
     if (ui.update("autoscan")) ui.answer(autoscan);
     if (ui.update("auto_save")) ui.answer(auto_save);
     if (ui.update("themas")) ui.answer(themas);

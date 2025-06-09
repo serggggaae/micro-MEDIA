@@ -26,7 +26,7 @@ void ClockControl() {
   }
 
   //Куранты
-  if (sleeping == false && kurant_flag == true && slowk == false) {  // && radio_mode != 2) {
+  if (sleeping == false && kurant_flag == true && slowk == false && skan == false) {  // && radio_mode != 2) {
     //каждый час
     if (cMinute == 59 && cSecond == 59) {
       replay_station_flag = false;

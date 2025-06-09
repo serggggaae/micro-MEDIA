@@ -343,7 +343,7 @@ int balance = 0;
 char cur_im[6], max_im[6];
 int VUlevel, oldVUlevel, maxVUlevel = 100000;
 int w, h;
-bool update_flag = false;
+bool update_flag = false, skan = false;
 bool pause_flag = false;
 bool sd_flag = true;
 File file;
@@ -365,10 +365,11 @@ bool eeprom_flag = false;
 unsigned long eeprom_timer, update_timer, info_timer, info_timer1, slow_timer, retry_timer, total_timer;
 bool auto_save = true;
 int save_time = 5;  // Интервал проверки необходимости сохранение настроек в минутах
-bool rand_song = false;
+bool rand_song = false, old_rand_song;
 bool all_fav_flag = false;
 bool alarm_mode[MAX_ALARMS] = { 0 };  // 0 - радио, 1 - проигрыватель
 const char alarm_mode_list[] = "радио,проигрыватель";
+uint16_t counter_st = 0;
 
 #define off 0x40
 #define repeat 0x42
@@ -390,6 +391,7 @@ const char alarm_mode_list[] = "радио,проигрыватель";
 #define lokp 0x08
 #define next10 0x54
 #define prev10 0x55
+#define skansss 0x43
 
 //Куранты
 bool slowk = false, autoscan = false;
@@ -406,7 +408,7 @@ int retry = 0;
 int cur_lang = 0;
 bool speek_end = false;
 
-bool info_flag0, info_flag, voice_menu_flag = false, voice_sw_flag = false, del_st_sw_flag = false;
+bool info_flag0, info_flag, voice_menu_flag = false, voice_sw_flag = false, del_st_sw_flag = false, del_st_slow_flag = false;
 
 int slow, old_slow;
 bool mute_flag = false;
@@ -735,6 +737,7 @@ void setup() {
       1);                    // Указываем пин для этой задачи
     delay(500);
   }
+  old_rand_song = rand_song;
   initOTA();
   if (led_time > 0) led_timer = millis();
   if (sleeping == true) {
@@ -776,7 +779,9 @@ void Radio_task_proc(void *pvParameters) {
         title = F("Интернет-радиостанция\nочень долго\nне отвечает.");
         Serial.println(title);
         vTaskDelay(300);
-        notfound();
+        if (del_st_sw_flag) notfound();
+        else if (!autoscan) cur_radio_station++;
+        notend();
       }
       if (play_station_flag == true) {
         play_station_flag = false;
@@ -926,6 +931,15 @@ void audio_info(const char *info) {
     c_volume = 0;
     channels = add_info;
     update_timer = millis();
+    if (skan && radio_mode == 0) {
+      counter_st++;
+      cur_radio_station++;
+      if (counter_st >= radio_station_count) {
+        skan = false;
+        counter_st = 0;
+      }
+      notend();
+    }
     update_flag = true;
     if (channels == "1") {
       audio.setBalance(0);
@@ -1029,7 +1043,9 @@ void audio_info(const char *info) {
       update_timer = millis();
       stop_song_Play();
       vTaskDelay(300);
-      notfound();
+      if (del_st_sw_flag) notfound();
+      else if (!autoscan) cur_radio_station++;
+      notend();
     }
   }
 
@@ -1038,7 +1054,9 @@ void audio_info(const char *info) {
     stop_song_Play();
     title = F("Трансляция прервалaсь\nи не может быть восстановлена.");
     update_timer = millis();
-    notfound();
+    if (del_st_sw_flag) notfound();
+    else if (!autoscan) cur_radio_station++;
+    notend();
   }
 
   if (buff.indexOf(F("unknown content found at:")) != -1) {
@@ -1047,7 +1065,9 @@ void audio_info(const char *info) {
     na_flag = true;
     title = F("Интернет-станция\nне ведёт трансляцию.\nВыберите другую станцию.");
     update_timer = millis();
-    notfound();
+    if (del_st_sw_flag) notfound();
+    else if (!autoscan) cur_radio_station++;
+    notend();
   }
 
   if (buff.indexOf(F("slow stream, dropouts are possible")) != -1 && internet_flag == true) {
@@ -1139,7 +1159,9 @@ void audio_showstreamtitle(const char *info) {
   if (buff.indexOf(F("HTTP/1.1 400 Bad Request")) != -1) {
     esp_task_wdt_reset();
     vTaskDelay(300);
-    notfound();
+    if (del_st_sw_flag) notfound();
+    else if (!autoscan) cur_radio_station++;
+    notend();
     speek_end = true;
   }
   if (buff.indexOf(F("404 Not Available")) != -1) {
@@ -1149,7 +1171,9 @@ void audio_showstreamtitle(const char *info) {
     title = F("Интернет-радиостанция\nне отвечает.");
     esp_task_wdt_reset();
     vTaskDelay(300);
-    notfound();
+    if (del_st_sw_flag) notfound();
+    else if (!autoscan) cur_radio_station++;
+    notend();
   }
   if (buff.indexOf(F("404 Not Found")) != -1 || buff.indexOf(F("404 File Not Found")) != -1) {
     old_radio_station = radio_station;
@@ -1158,7 +1182,9 @@ void audio_showstreamtitle(const char *info) {
     title = F("Интернет-радиостанция\nне найдена.");
     esp_task_wdt_reset();
     vTaskDelay(300);
-    notfound();
+    if (del_st_sw_flag) notfound();
+    else if (!autoscan) cur_radio_station++;
+    notend();
   }
 }
 
@@ -1324,7 +1350,9 @@ void GetPlayInfo() {
       else {
         slows++;
         if (slows > 5) {
-          notfound();
+          if (del_st_slow_flag) notfound();
+          else if (!autoscan) cur_radio_station++;
+          notend();
         }
       }
     }
@@ -1581,43 +1609,50 @@ void notfound() {
   slows = 0;
   slowk = true;
   if (favorites_flag == favorites_flag4) {
-    if (del_st_sw_flag) {
-      if (favorites_flag) {
-        audio.setVolume(0);
-        radio_station_count = DelStationFromFav();
-        cur_radio_location = 0;
-        cur_radio_type = 0;
-        if (cur_radio_station > radio_station_count) cur_radio_station = radio_station_count;
-        //clearInfo();
+    if (favorites_flag) {
+      audio.setVolume(0);
+      radio_station_count = DelStationFromFav();
+      cur_radio_location = 0;
+      cur_radio_type = 0;
+      if (cur_radio_station > radio_station_count) cur_radio_station = radio_station_count;
+      //clearInfo();
+      radio_station = LoadRadioStation(cur_radio_station, cur_radio_type, cur_radio_location);
+    } else {
+      DelStation();
+      !favorites_flag;
+      DelStation();
+      !favorites_flag;
+      radio_station_count--;
+      if (cur_radio_station > 0) {
+        clearInfo();
         radio_station = LoadRadioStation(cur_radio_station, cur_radio_type, cur_radio_location);
-      } else {
-        DelStation();
-        !favorites_flag;
-        DelStation();
-        !favorites_flag;
-        radio_station_count--;
-        if (cur_radio_station > 0) {
-          clearInfo();
-          radio_station = LoadRadioStation(cur_radio_station, cur_radio_type, cur_radio_location);
-        }
       }
-      if (cur_radio_station < cur_radio_station2) cur_radio_station2 = cur_radio_station2--;
-      if (cur_radio_station < cur_radio_station3) cur_radio_station3 = cur_radio_station3--;
     }
-    if (autoscan) {
-      if (cur_radio_station != cur_radio_station2 && cur_radio_station != cur_radio_station3) cur_radio_station = cur_radio_station2;
-      else if (cur_radio_station != cur_radio_station3) cur_radio_station = cur_radio_station3;
-      else {
-        cur_radio_station = cur_radio_station + 3;
-        cur_radio_station2 = cur_radio_station2 + 3;
-        cur_radio_station3 = cur_radio_station3 + 3;
-      }
+    if (cur_radio_station < cur_radio_station2) cur_radio_station2 = cur_radio_station2--;
+    if (cur_radio_station < cur_radio_station3) cur_radio_station3 = cur_radio_station3--;
+  }
+}
+void notend() {
+  slows = 0;
+  slowk = true;
+  if (autoscan) {
+    if (cur_radio_station != cur_radio_station2 && cur_radio_station != cur_radio_station3) cur_radio_station = cur_radio_station2;
+    else if (cur_radio_station != cur_radio_station3) cur_radio_station = cur_radio_station3;
+    else {
+      cur_radio_station = cur_radio_station + 3;
+      cur_radio_station2 = cur_radio_station2 + 3;
+      cur_radio_station3 = cur_radio_station3 + 3;
     }
   }
+
+  if (cur_radio_station > radio_station_count) cur_radio_station = 1;
+  if (cur_radio_station < 1) cur_radio_station = radio_station_count;
+
   if (autoscan) PlayStation();
-  else if (del_st_sw_flag) {
+  else {
     pre_radio_station = cur_radio_station;
-    replay_station_flag = true;
+    play_station_flag = true;
+    eeprom_flag = true;
   }
   update_flag = true;
 }

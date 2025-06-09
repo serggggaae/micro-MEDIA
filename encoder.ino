@@ -346,8 +346,8 @@ void CheckButton() {
           PlayStation();
           break;
         case 2:  //Случайная композиция - фиксация
-          repeatm2();
           cur_music_file = rnd_music;
+          repeatm2();
           title = " ";
           if (favorites_flag1 == true) {
             if (all_fav_flag == true) {
